@@ -2,26 +2,23 @@ import os
 import asyncio
 import json
 import aiohttp
-import threading
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from aiohttp import web
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler, MessageHandler, filters
 
-# Dummy HTTP Server to satisfy Render's port binding requirement
-class DummyHandler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-type", "text/plain")
-        self.end_headers()
-        self.wfile.write(b"ProSciffoniBot is running!")
+# Dummy HTTP Server using aiohttp to satisfy Render's port binding requirement
+async def handle_root(request):
+    return web.Response(text="ProSciffoniBot is running!")
 
-def run_dummy_server():
+async def start_dummy_server():
+    app = web.Application()
+    app.add_routes([web.get('/', handle_root)])
     port = int(os.getenv("PORT", 8000))  # Use Render's PORT if available, else fallback to 8000
-    server = HTTPServer(("", port), DummyHandler)
-    server.serve_forever()
-
-# Start the dummy server in a separate thread
-threading.Thread(target=run_dummy_server, daemon=True).start()
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
+    print(f"Dummy server started on port {port}")
 
 # Environment variables
 BOT_TOKEN = "7962541121:AAHIfmC8ikd7eQKdAkYV9X8dyjr8OfeLs9E"
@@ -373,4 +370,6 @@ async def run_bot():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_filter_input))
     
     print("ProSciffoniBot running...")
-    # Start meme
+    # Start the dummy server
+    asyncio.create_task(start_dummy_server())
+    # Start meme coin detection in a background t
