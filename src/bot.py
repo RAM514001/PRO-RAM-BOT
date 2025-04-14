@@ -14,11 +14,14 @@ async def start_dummy_server():
     app = web.Application()
     app.add_routes([web.get('/', handle_root)])
     port = int(os.getenv("PORT", 8000))  # Use Render's PORT if available, else fallback to 8000
+    print(f"Attempting to start dummy server on port {port}...")
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, '0.0.0.0', port)
     await site.start()
-    print(f"Dummy server started on port {port}")
+    print(f"Dummy server successfully started on port {port}")
+    # Small delay to ensure Render detects the port
+    await asyncio.sleep(5)
 
 # Environment variables
 BOT_TOKEN = "7962541121:AAHIfmC8ikd7eQKdAkYV9X8dyjr8OfeLs9E"
@@ -369,7 +372,4 @@ async def run_bot():
     app.add_handler(CallbackQueryHandler(button_handler))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_filter_input))
     
-    print("ProSciffoniBot running...")
-    # Start the dummy server
-    asyncio.create_task(start_dummy_server())
-    # Start meme coin detection in a background t
+    pr
